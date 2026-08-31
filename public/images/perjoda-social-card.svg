@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="PERJODA — Reliable Public Transportation">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a3ea1"/>
+      <stop offset="1" stop-color="#1552cc"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1010" cy="150" r="120" fill="#fcd116" opacity="0.85"/>
+  <g stroke="#ffffff" stroke-opacity="0.18" stroke-width="3" fill="none">
+    <path d="M60 470 C 300 360, 700 560, 1140 420"/>
+  </g>
+  <text x="90" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="96" font-weight="800" fill="#ffffff" letter-spacing="4">PERJODA</text>
+  <text x="92" y="372" font-family="Segoe UI, system-ui, sans-serif" font-size="40" fill="#cfe0f2">Moving People. Connecting Communities.</text>
+  <text x="92" y="430" font-family="Segoe UI, system-ui, sans-serif" font-size="28" fill="#9fc0e6">Routes • Fares • Passenger Information • Announcements</text>
+  <g transform="translate(92 480)">
+    <rect x="0" y="0" width="300" height="90" rx="16" fill="#ffffff"/>
+    <rect x="0" y="0" width="300" height="18" rx="9" fill="#fcd116"/>
+    <rect x="20" y="34" width="52" height="34" rx="6" fill="#bcd4f2"/>
+    <rect x="82" y="34" width="52" height="34" rx="6" fill="#bcd4f2"/>
+    <rect x="144" y="34" width="52" height="34" rx="6" fill="#bcd4f2"/>
+    <rect x="206" y="34" width="74" height="34" rx="6" fill="#bcd4f2"/>
+    <circle cx="70" cy="90" r="16" fill="#10233b"/>
+    <circle cx="230" cy="90" r="16" fill="#10233b"/>
+  </g>
+</svg>
