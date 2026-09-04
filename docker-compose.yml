@@ -1,0 +1,75 @@
+# =============================================================================
+# LOCAL DEVELOPMENT / TESTING ONLY  —  NOT used by Coolify.
+#
+# In production, Coolify runs the `app` image on its own and the database is a
+# SEPARATE Coolify-managed MySQL resource on the internal Docker network. The
+# `db` service below is a throwaway MySQL for local testing and is bound to
+# 127.0.0.1 only — it is never exposed publicly.
+#
+#   docker compose up --build          # http://localhost:8080  (+ /admin)
+#   docker compose down -v             # wipe local db + storage
+# =============================================================================
+
+services:
+    app:
+        build:
+            context: .
+            target: runtime
+        ports:
+            - "8080:80"
+        environment:
+            APP_NAME: "PERJODA Transport Cooperative"
+            APP_ENV: local
+            APP_DEBUG: "true"
+            # Local-only demo key. Production sets its own via Coolify.
+            APP_KEY: "base64:25nwBTX8rF2IZ+bMvstgOpJSJOF0d5huQE8GbPpx548="
+            APP_URL: "http://localhost:8080"
+
+            LOG_CHANNEL: stack
+            LOG_STACK: single
+            LOG_LEVEL: debug
+
+            DB_CONNECTION: mysql
+            DB_HOST: db
+            DB_PORT: "3306"
+            DB_DATABASE: perjoda_db
+            DB_USERNAME: perjoda
+            DB_PASSWORD: secret
+
+            SESSION_DRIVER: database
+            CACHE_STORE: database
+            QUEUE_CONNECTION: database
+
+            MAIL_MAILER: log
+
+            # Seed the admin account + starter content on first boot.
+            DB_SEED_ON_DEPLOY: "true"
+        volumes:
+            - app-storage:/var/www/html/storage/app/public
+        depends_on:
+            db:
+                condition: service_healthy
+        restart: unless-stopped
+
+    db:
+        image: mysql:8.4
+        # Host-loopback only. Change the left side if 3307 is taken locally.
+        ports:
+            - "127.0.0.1:3307:3306"
+        environment:
+            MYSQL_DATABASE: perjoda_db
+            MYSQL_USER: perjoda
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: rootsecret
+        volumes:
+            - db-data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootsecret"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        restart: unless-stopped
+
+volumes:
+    db-data:
+    app-storage:
