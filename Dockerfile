@@ -1,10 +1,11 @@
 # syntax=docker/dockerfile:1.7
 #
 # PERJODA Transport Cooperative — production image
-# Laravel 13 (PHP 8.3 FPM) + React 19 / Vite build + Nginx, one container, port 80.
+# Laravel 13 (PHP 8.4 FPM) + React 19 / Vite build + Nginx, one container, port 80.
+# NOTE: PHP 8.4 (not 8.3) — composer.lock pins Symfony 8.1, which needs php >=8.4.1.
 #
 #   Stage 1  frontend  — compile the React/Vite production bundle
-#   Stage 2  php-base   — PHP 8.3-fpm-alpine + required extensions (shared)
+#   Stage 2  php-base   — PHP 8.4-fpm-alpine + required extensions (shared)
 #   Stage 3  vendor     — Composer production dependencies (no dev)
 #   Stage 4  runtime    — Nginx + PHP-FPM under supervisord (final image)
 #
@@ -38,7 +39,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Stage 2: PHP base with the extensions the app needs (shared by 3 and 4)
 # ---------------------------------------------------------------------------
-FROM php:8.3-fpm-alpine AS php-base
+FROM php:8.4-fpm-alpine AS php-base
 
 # mlocati's installer pulls the right apk build deps automatically.
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/

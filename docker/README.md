@@ -7,7 +7,7 @@ image build. The database is a **separate Coolify-managed MySQL resource**.
 ```
 Dockerfile
 ├── frontend  (node:22-alpine)      npm ci → npm run build → public/build
-├── php-base  (php:8.3-fpm-alpine)  + pdo_mysql mbstring bcmath gd zip intl exif pcntl opcache
+├── php-base  (php:8.4-fpm-alpine)  + pdo_mysql mbstring bcmath gd zip intl exif pcntl opcache
 ├── vendor    (php-base + composer) composer install --no-dev --optimize-autoloader
 └── runtime   (php-base)            + nginx + supervisor  ← final image (no Node, no Composer)
 
