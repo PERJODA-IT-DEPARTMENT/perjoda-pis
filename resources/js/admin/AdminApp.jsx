@@ -10,8 +10,9 @@ import Fares from './pages/Fares';
 import Messages from './pages/Messages';
 import SiteContent from './pages/SiteContent';
 import Users from './pages/Users';
+import Permissions from './pages/Permissions';
 
-function Protected({ children }) {
+function Protected({ children, roles, permission }) {
     const { user, ready } = useAuth();
     const location = useLocation();
     if (!ready) {
@@ -22,6 +23,8 @@ function Protected({ children }) {
         );
     }
     if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+    if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+    if (permission && !user.permissions?.includes(permission)) return <Navigate to="/" replace />;
     return <Layout>{children}</Layout>;
 }
 
@@ -30,12 +33,19 @@ function Shell() {
         <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Protected><Dashboard /></Protected>} />
-            <Route path="/announcements" element={<Protected><Announcements /></Protected>} />
-            <Route path="/routes" element={<Protected><RoutesPage /></Protected>} />
-            <Route path="/fares" element={<Protected><Fares /></Protected>} />
-            <Route path="/messages" element={<Protected><Messages /></Protected>} />
-            <Route path="/site-content" element={<Protected><SiteContent /></Protected>} />
-            <Route path="/users" element={<Protected><Users /></Protected>} />
+            <Route
+                path="/announcements"
+                element={<Protected permission="announcements.manage"><Announcements /></Protected>}
+            />
+            <Route path="/routes" element={<Protected permission="routes.manage"><RoutesPage /></Protected>} />
+            <Route path="/fares" element={<Protected permission="fares.manage"><Fares /></Protected>} />
+            <Route path="/messages" element={<Protected permission="messages.manage"><Messages /></Protected>} />
+            <Route
+                path="/site-content"
+                element={<Protected permission="site_content.manage"><SiteContent /></Protected>}
+            />
+            <Route path="/users" element={<Protected roles={['superadmin']}><Users /></Protected>} />
+            <Route path="/permissions" element={<Protected roles={['superadmin']}><Permissions /></Protected>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );

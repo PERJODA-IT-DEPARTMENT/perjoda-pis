@@ -101,14 +101,106 @@ function ObjectList({ items, fields, onChange, blank }) {
     );
 }
 
+/* Repeatable list of showcase videos: caption + URL/upload, reorderable */
+function VideoList({ items, onChange, onUpload, uploadingIndex, uploadProgress }) {
+    const set = (i, k, v) => onChange(items.map((x, idx) => (idx === i ? { ...x, [k]: v } : x)));
+    const add = () => onChange([...items, { title: '', videoUrl: '' }]);
+    const remove = (i) => onChange(items.filter((_, idx) => idx !== i));
+    const move = (i, d) => {
+        const j = i + d;
+        if (j < 0 || j >= items.length) return;
+        const n = [...items];
+        [n[i], n[j]] = [n[j], n[i]];
+        onChange(n);
+    };
+
+    return (
+        <div>
+            {items.map((item, i) => (
+                <div className="repeat-row" key={i}>
+                    <div className="row g-2">
+                        <div className="col-md-4">
+                            <label className="form-label small fw-semibold mb-1">Caption</label>
+                            <input
+                                className="form-control form-control-sm"
+                                value={item.title || ''}
+                                onChange={(e) => set(i, 'title', e.target.value)}
+                                placeholder="e.g. Fleet Overview"
+                            />
+                        </div>
+                        <div className="col-md-8">
+                            <label className="form-label small fw-semibold mb-1">Video</label>
+                            <div className="d-flex gap-2 align-items-center flex-wrap">
+                                <input
+                                    className="form-control form-control-sm"
+                                    style={{ maxWidth: 300 }}
+                                    value={item.videoUrl || ''}
+                                    onChange={(e) => set(i, 'videoUrl', e.target.value)}
+                                    placeholder="https://…/clip.mp4"
+                                />
+                                <label className="btn btn-outline-secondary btn-sm mb-0">
+                                    {uploadingIndex === i ? `Uploading… ${uploadProgress}%` : 'Upload'}
+                                    <input
+                                        type="file"
+                                        accept="video/mp4,video/webm,video/quicktime"
+                                        hidden
+                                        disabled={uploadingIndex !== null}
+                                        onChange={(e) => onUpload(i, e.target.files?.[0])}
+                                    />
+                                </label>
+                            </div>
+                            {uploadingIndex === i && (
+                                <div className="progress mt-2" style={{ height: 6, maxWidth: 300 }}>
+                                    <div
+                                        className="progress-bar"
+                                        role="progressbar"
+                                        style={{ width: `${uploadProgress}%` }}
+                                    />
+                                </div>
+                            )}
+                            {item.videoUrl && uploadingIndex !== i && (
+                                <video
+                                    className="mt-2 rounded border d-block"
+                                    controls
+                                    style={{ maxWidth: 280, maxHeight: 160 }}
+                                >
+                                    <source src={item.videoUrl} />
+                                </video>
+                            )}
+                        </div>
+                    </div>
+                    <div className="d-flex justify-content-end gap-1 mt-2">
+                        <button type="button" className="btn btn-sm btn-light" onClick={() => move(i, -1)}>
+                            <i className="bi bi-arrow-up" />
+                        </button>
+                        <button type="button" className="btn btn-sm btn-light" onClick={() => move(i, 1)}>
+                            <i className="bi bi-arrow-down" />
+                        </button>
+                        <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => remove(i)}>
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            ))}
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={add}>
+                <i className="bi bi-plus-lg me-1" />
+                Add video
+            </button>
+        </div>
+    );
+}
+
 const TABS = [
     ['contact', 'Contact & Hours'],
     ['about', 'About'],
+    ['showcase', 'Showcase Videos'],
     ['mission', 'Mission & Vision'],
     ['fleet', 'Fleet'],
     ['faq', 'FAQ'],
     ['fares', 'Fare Notices'],
 ];
+
+const MAX_VIDEO_MB = 200;
 
 export default function SiteContent() {
     const toast = useToast();
@@ -119,6 +211,8 @@ export default function SiteContent() {
     const [tab, setTab] = useState('contact');
     const [draft, setDraft] = useState(null);
     const [busy, setBusy] = useState(false);
+    const [videoUploadIndex, setVideoUploadIndex] = useState(null);
+    const [videoProgress, setVideoProgress] = useState(0);
 
     useEffect(() => {
         if (data) setDraft(structuredClone(data));
@@ -142,6 +236,40 @@ export default function SiteContent() {
             toast(e.message || 'Could not save', 'error');
         } finally {
             setBusy(false);
+        }
+    };
+
+    const uploadVideoAt = async (i, file) => {
+        if (!file) return;
+        if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+            toast(`Video must be ${MAX_VIDEO_MB}MB or smaller`, 'error');
+            return;
+        }
+        setVideoUploadIndex(i);
+        setVideoProgress(0);
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await api.post('/uploads/video', fd, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                timeout: 0,
+                onUploadProgress: (evt) => {
+                    if (evt.total) setVideoProgress(Math.round((evt.loaded / evt.total) * 100));
+                },
+            });
+            const url = res.data.data.url;
+            setDraft((p) => ({
+                ...p,
+                showcase: {
+                    ...p.showcase,
+                    videos: p.showcase.videos.map((v, idx) => (idx === i ? { ...v, videoUrl: url } : v)),
+                },
+            }));
+            toast('Video uploaded — click Save to publish it');
+        } catch (e) {
+            toast(e.message || 'Upload failed', 'error');
+        } finally {
+            setVideoUploadIndex(null);
         }
     };
 
@@ -263,6 +391,54 @@ export default function SiteContent() {
                             onClick={() => save({ about: d.about }, 'About')}
                         >
                             Save About
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {tab === 'showcase' && (
+                <div className="card">
+                    <div className="card-body">
+                        <p className="muted small mb-3">
+                            Add one or more short videos (MP4/WebM, up to {MAX_VIDEO_MB}MB each) highlighting
+                            the fleet, routes, and day-to-day operations. They appear as an auto-playing
+                            slider in the "Our Operations" section on the public homepage, right after the
+                            About section.
+                        </p>
+                        <Field label="Section title">
+                            <input
+                                className="form-control"
+                                value={d.showcase.title || ''}
+                                onChange={(e) => setField('showcase', 'title', e.target.value)}
+                                placeholder="See PERJODA in Motion"
+                            />
+                        </Field>
+                        <Field label="Description" hint="Short intro shown above the videos.">
+                            <textarea
+                                className="form-control"
+                                rows={2}
+                                value={d.showcase.description || ''}
+                                onChange={(e) => setField('showcase', 'description', e.target.value)}
+                                placeholder="A closer look at our fleet, our routes, and the everyday journeys we make possible."
+                            />
+                        </Field>
+                        <hr />
+                        <Field label="Videos" hint="Drag the arrows to reorder — this is the order they play in.">
+                            <VideoList
+                                items={d.showcase.videos || []}
+                                onChange={(v) => setGroup('showcase', { ...d.showcase, videos: v })}
+                                onUpload={uploadVideoAt}
+                                uploadingIndex={videoUploadIndex}
+                                uploadProgress={videoProgress}
+                            />
+                        </Field>
+
+                        <button
+                            className="btn btn-primary"
+                            disabled={busy || videoUploadIndex !== null}
+                            onClick={() => save({ showcase: d.showcase }, 'Showcase videos')}
+                        >
+                            Save Showcase
                         </button>
                     </div>
                 </div>

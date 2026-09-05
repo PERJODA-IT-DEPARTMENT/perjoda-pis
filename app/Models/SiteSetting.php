@@ -45,6 +45,7 @@ class SiteSetting extends Model
                 'organisation' => $all['organisation'] ?? [],
                 'quickInfo' => $all['quickInfo'] ?? [],
                 'about' => $all['about'] ?? ['paragraphs' => [], 'values' => []],
+                'showcase' => $all['showcase'] ?? ['title' => '', 'description' => '', 'videos' => []],
                 'missionVision' => $all['missionVision'] ?? [],
                 'fleetStats' => $all['fleetStats'] ?? [],
                 'faqs' => $all['faqs'] ?? [],

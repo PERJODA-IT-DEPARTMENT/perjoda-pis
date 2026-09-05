@@ -3,12 +3,29 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { ConfirmButton, ErrorNote, Field, Loading, Modal, useApiResource, useToast } from '../ui';
 
-function UserForm({ initial, onDone, onCancel }) {
+const ROLES = [
+    ['superadmin', 'Superadmin'],
+    ['admin', 'Admin'],
+    ['staff', 'Staff'],
+];
+
+const ROLE_BADGE = {
+    superadmin: 'text-bg-primary',
+    admin: 'text-bg-info',
+    staff: 'text-bg-secondary',
+};
+
+function RoleBadge({ role }) {
+    return <span className={`badge ${ROLE_BADGE[role] || 'text-bg-secondary'}`}>{role}</span>;
+}
+
+function UserForm({ initial, isSelf, onDone, onCancel }) {
     const toast = useToast();
     const [form, setForm] = useState({
         name: initial?.name || '',
         email: initial?.email || '',
         password: '',
+        role: initial?.role || 'staff',
     });
     const [errors, setErrors] = useState({});
     const [busy, setBusy] = useState(false);
@@ -22,6 +39,7 @@ function UserForm({ initial, onDone, onCancel }) {
             if (initial?.id) {
                 const payload = { name: form.name, email: form.email };
                 if (form.password) payload.password = form.password;
+                if (!isSelf) payload.role = form.role;
                 await api.put(`/users/${initial.id}`, payload);
                 toast('Account updated');
             } else {
@@ -64,6 +82,33 @@ function UserForm({ initial, onDone, onCancel }) {
                     onChange={(e) => set('password', e.target.value)}
                     autoComplete="new-password"
                 />
+            </Field>
+            <Field
+                label="Role"
+                error={errors.role?.[0]}
+                hint={
+                    isSelf
+                        ? "You can't change your own role."
+                        : 'Superadmin: full access incl. staff accounts. Admin: full content access. Staff: announcements & messages only.'
+                }
+            >
+                {isSelf ? (
+                    <div>
+                        <RoleBadge role={form.role} />
+                    </div>
+                ) : (
+                    <select
+                        className="form-select"
+                        value={form.role}
+                        onChange={(e) => set('role', e.target.value)}
+                    >
+                        {ROLES.map(([value, label]) => (
+                            <option value={value} key={value}>
+                                {label}
+                            </option>
+                        ))}
+                    </select>
+                )}
             </Field>
             <div className="d-flex justify-content-end gap-2">
                 <button type="button" className="btn btn-light" onClick={onCancel}>
@@ -117,6 +162,7 @@ export default function Users() {
                                 <tr>
                                     <th>Name</th>
                                     <th>Email</th>
+                                    <th>Role</th>
                                     <th>Added</th>
                                     <th className="text-end">Actions</th>
                                 </tr>
@@ -131,6 +177,9 @@ export default function Users() {
                                             )}
                                         </td>
                                         <td>{u.email}</td>
+                                        <td>
+                                            <RoleBadge role={u.role} />
+                                        </td>
                                         <td className="muted small">
                                             {new Date(u.created_at).toLocaleDateString()}
                                         </td>
@@ -162,6 +211,7 @@ export default function Users() {
                 >
                     <UserForm
                         initial={editing === 'new' ? null : editing}
+                        isSelf={editing !== 'new' && editing.id === user?.id}
                         onCancel={() => setEditing(null)}
                         onDone={() => {
                             setEditing(null);

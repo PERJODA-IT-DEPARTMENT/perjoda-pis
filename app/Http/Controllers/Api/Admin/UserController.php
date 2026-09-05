@@ -17,7 +17,7 @@ class UserController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => User::query()->orderBy('name')->get(['id', 'name', 'email', 'created_at']),
+            'data' => User::query()->orderBy('name')->get(['id', 'name', 'email', 'role', 'created_at']),
         ]);
     }
 
@@ -27,17 +27,19 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'max:255'],
+            'role' => ['required', Rule::in(User::ROLES)],
         ]);
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'role' => $data['role'],
         ]);
 
         return response()->json([
             'success' => true,
-            'data' => $user->only(['id', 'name', 'email', 'created_at']),
+            'data' => $user->only(['id', 'name', 'email', 'role', 'created_at']),
         ], 201);
     }
 
@@ -47,18 +49,35 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:8', 'max:255'],
+            'role' => ['sometimes', Rule::in(User::ROLES)],
         ]);
+
+        if (array_key_exists('role', $data) && $request->user()->id === $user->id) {
+            throw new HttpException(422, 'You cannot change your own role.');
+        }
+
+        if (
+            array_key_exists('role', $data)
+            && $data['role'] !== User::ROLE_SUPERADMIN
+            && $user->role === User::ROLE_SUPERADMIN
+            && User::where('role', User::ROLE_SUPERADMIN)->count() <= 1
+        ) {
+            throw new HttpException(422, 'At least one superadmin account must remain.');
+        }
 
         $user->name = $data['name'];
         $user->email = $data['email'];
         if (! empty($data['password'])) {
             $user->password = Hash::make($data['password']);
         }
+        if (array_key_exists('role', $data)) {
+            $user->role = $data['role'];
+        }
         $user->save();
 
         return response()->json([
             'success' => true,
-            'data' => $user->only(['id', 'name', 'email', 'created_at']),
+            'data' => $user->only(['id', 'name', 'email', 'role', 'created_at']),
         ]);
     }
 
@@ -70,6 +89,10 @@ class UserController extends Controller
 
         if (User::count() <= 1) {
             throw new HttpException(422, 'At least one staff account must remain.');
+        }
+
+        if ($user->role === User::ROLE_SUPERADMIN && User::where('role', User::ROLE_SUPERADMIN)->count() <= 1) {
+            throw new HttpException(422, 'At least one superadmin account must remain.');
         }
 
         $user->tokens()->delete();

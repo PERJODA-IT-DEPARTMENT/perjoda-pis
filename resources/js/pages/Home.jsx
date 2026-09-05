@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import QuickInfo from '../components/QuickInfo';
 import About from '../components/About';
+import Showcase from '../components/Showcase';
 import MissionVision from '../components/MissionVision';
 import Services from '../components/Services';
 import Routes from '../components/Routes';
@@ -30,6 +31,7 @@ export default function Home() {
                 <Hero />
                 <QuickInfo />
                 <About />
+                <Showcase />
                 <MissionVision />
                 <Services />
                 <Routes />

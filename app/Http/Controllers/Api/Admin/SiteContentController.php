@@ -47,6 +47,13 @@ class SiteContentController extends Controller
             'about.values.*.title' => ['required', 'string', 'max:120'],
             'about.values.*.text' => ['required', 'string', 'max:400'],
 
+            'showcase' => ['sometimes', 'array'],
+            'showcase.title' => ['nullable', 'string', 'max:160'],
+            'showcase.description' => ['nullable', 'string', 'max:600'],
+            'showcase.videos' => ['nullable', 'array', 'max:12'],
+            'showcase.videos.*.title' => ['nullable', 'string', 'max:160'],
+            'showcase.videos.*.videoUrl' => ['required', 'string', 'max:500'],
+
             'missionVision' => ['sometimes', 'array'],
             'missionVision.mission' => ['required_with:missionVision', 'string', 'max:1000'],
             'missionVision.visionIntro' => ['nullable', 'string', 'max:400'],

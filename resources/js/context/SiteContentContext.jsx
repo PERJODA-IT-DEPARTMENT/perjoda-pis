@@ -18,6 +18,7 @@ const DEFAULTS = {
         supportSummary: 'Passenger Assistance',
     },
     about: { paragraphs: defaultParagraphs, values: defaultValues },
+    showcase: { title: '', description: '', videos: [] },
     missionVision: defaultMissionVision,
     fleetStats: defaultFleet,
     faqs: defaultFaqs,
@@ -36,6 +37,11 @@ function merge(remote) {
                 ? remote.about.paragraphs
                 : DEFAULTS.about.paragraphs,
             values: remote.about?.values?.length ? remote.about.values : DEFAULTS.about.values,
+        },
+        showcase: {
+            title: remote.showcase?.title || DEFAULTS.showcase.title,
+            description: remote.showcase?.description || DEFAULTS.showcase.description,
+            videos: remote.showcase?.videos?.length ? remote.showcase.videos : DEFAULTS.showcase.videos,
         },
         missionVision: { ...DEFAULTS.missionVision, ...(remote.missionVision || {}) },
         fleetStats: remote.fleetStats?.length ? remote.fleetStats : DEFAULTS.fleetStats,

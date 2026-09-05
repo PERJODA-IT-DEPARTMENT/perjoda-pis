@@ -23,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Behind Coolify's reverse proxy (Traefik). Trust its forwarded
         // headers so HTTPS URLs and client IPs resolve correctly.
         $middleware->trustProxies(at: '*');
+
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureRole::class,
+            'permission' => \App\Http\Middleware\EnsurePermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

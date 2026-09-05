@@ -37,7 +37,7 @@ class AuthController extends Controller
             'success' => true,
             'data' => [
                 'token' => $token,
-                'user' => $user->only(['id', 'name', 'email']),
+                'user' => $this->serialize($user),
             ],
         ]);
     }
@@ -49,7 +49,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $request->user()->only(['id', 'name', 'email']),
+            'data' => $this->serialize($request->user()),
         ]);
     }
 
@@ -61,5 +61,14 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['success' => true, 'message' => 'Signed out.']);
+    }
+
+    /** @return array<string, mixed> */
+    private function serialize(User $user): array
+    {
+        return [
+            ...$user->only(['id', 'name', 'email', 'role']),
+            'permissions' => $user->effectivePermissions(),
+        ];
     }
 }
