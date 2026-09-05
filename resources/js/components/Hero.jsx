@@ -8,7 +8,7 @@ export default function Hero() {
             <div className="hero__scrim" aria-hidden="true" />
             <div className="container container-tight hero__inner">
                 <div className="row align-items-center g-5">
-                    <div className="col-lg-6">
+                    <div className="col-md-6">
                         <h1 id="hero-title">Moving People. Connecting Communities.</h1>
                         <p className="hero__lead mt-3">
                             Reliable transportation services built around safety, convenience, and a
@@ -42,7 +42,7 @@ export default function Hero() {
                         </div>
                     </div>
 
-                    <div className="col-lg-6 hero__art d-none d-md-block">
+                    <div className="col-md-6 hero__art d-none d-md-block">
                         <HeroArt />
                     </div>
                 </div>

@@ -162,7 +162,7 @@ function VideoList({ items, onChange, onUpload, uploadingIndex, uploadProgress }
                                 <video
                                     className="mt-2 rounded border d-block"
                                     controls
-                                    style={{ maxWidth: 280, maxHeight: 160 }}
+                                    style={{ maxWidth: 180, maxHeight: 320 }}
                                 >
                                     <source src={item.videoUrl} />
                                 </video>
